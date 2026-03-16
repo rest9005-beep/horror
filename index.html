@@ -1,0 +1,650 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOOR_13</title>
+<style>
+:root{
+  --fg:#f4f0ea;
+  --dim:#99918a;
+  --line:rgba(255,255,255,.08);
+  --panel:rgba(0,0,0,.56);
+  --red:#b30000;
+  --red2:#ff3a3a;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Georgia, "Times New Roman", serif;
+  background:#000;
+  color:var(--fg);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0 1px, transparent 1px 7px);
+  mix-blend-mode:soft-light;
+  animation:noise .2s steps(2) infinite;
+  pointer-events:none;
+  z-index:4;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at center, transparent 30%, rgba(0,0,0,.82) 100%);
+  pointer-events:none;
+  z-index:5;
+}
+@keyframes noise{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(1px,-1px)}
+  50%{transform:translate(-1px,1px)}
+  75%{transform:translate(1px,1px)}
+  100%{transform:translate(0,0)}
+}
+#scene{
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.4)),
+    url("img/door_room.png") center/cover no-repeat;
+  filter:brightness(.72) contrast(1.08) saturate(.8);
+  transform:scale(1.03);
+}
+#scene.closed{ animation:sceneBreathe 7s ease-in-out infinite; }
+@keyframes sceneBreathe{
+  0%,100%{transform:scale(1.03)}
+  50%{transform:scale(1.055)}
+}
+#scene.opened{ animation:hellPulse 1.4s infinite; }
+@keyframes hellPulse{
+  0%,100%{filter:brightness(.55) contrast(1.18) saturate(.9) hue-rotate(0deg)}
+  50%{filter:brightness(.82) contrast(1.45) saturate(1.35) hue-rotate(-14deg)}
+}
+#doorGlow{
+  position:fixed;
+  left:50%;
+  top:50%;
+  width:min(35vw,520px);
+  height:min(62vh,760px);
+  transform:translate(-50%,-46%);
+  background:radial-gradient(circle at center, rgba(255,255,220,.14), rgba(255,255,220,.06) 24%, rgba(0,0,0,0) 70%);
+  pointer-events:none;
+  z-index:2;
+  filter:blur(18px);
+}
+#doorGlow.hell{
+  background:radial-gradient(circle at center, rgba(255,0,0,.28), rgba(120,0,0,.1) 26%, rgba(0,0,0,0) 70%);
+  animation:redPulse 1s infinite;
+}
+@keyframes redPulse{
+  0%,100%{opacity:.7; transform:translate(-50%,-46%) scale(1)}
+  50%{opacity:1; transform:translate(-50%,-46%) scale(1.08)}
+}
+#overlay{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+  background:radial-gradient(circle at center, rgba(255,255,255,.04), rgba(0,0,0,.76) 55%, rgba(0,0,0,.9));
+}
+#overlay.hidden{ opacity:0; pointer-events:none; transition:opacity 1s ease; }
+.formCard{
+  width:min(92vw,520px);
+  background:rgba(0,0,0,.58);
+  border:1px solid var(--line);
+  backdrop-filter:blur(7px);
+  padding:28px;
+  box-shadow:0 0 40px rgba(0,0,0,.45), inset 0 0 30px rgba(255,255,255,.03);
+}
+.formCard h1{
+  margin:0 0 14px;
+  font-size:clamp(28px,5vw,42px);
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  font-weight:normal;
+  text-align:center;
+}
+.formCard p{
+  margin:0 0 22px;
+  color:var(--dim);
+  line-height:1.7;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  text-align:center;
+  font-size:13px;
+}
+label{
+  display:block;
+  margin:14px 0 8px;
+  font-size:12px;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  color:#d7d1cb;
+}
+input{
+  width:100%;
+  background:rgba(6,6,6,.76);
+  color:#f3ede6;
+  border:1px solid rgba(255,255,255,.12);
+  outline:none;
+  padding:14px 16px;
+  font-size:16px;
+  letter-spacing:.08em;
+}
+input:focus{
+  border-color:rgba(255,255,255,.28);
+  box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 0 20px rgba(255,255,255,.05);
+}
+button{
+  width:100%;
+  margin-top:18px;
+  border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(180deg, rgba(28,28,28,.95), rgba(10,10,10,.95));
+  color:#f3ede6;
+  padding:15px 18px;
+  font-size:14px;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+#err{
+  min-height:18px;
+  margin-top:14px;
+  color:#d16f6f;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-align:center;
+  text-transform:uppercase;
+}
+#topText{
+  position:fixed;
+  top:22px;
+  width:100%;
+  text-align:center;
+  z-index:9;
+  letter-spacing:.42em;
+  text-transform:uppercase;
+  font-size:12px;
+  color:#8b837d;
+}
+#message{
+  position:fixed;
+  left:50%;
+  top:12%;
+  transform:translateX(-50%);
+  z-index:15;
+  font-family:"Courier New", monospace;
+  font-size:clamp(14px,2vw,24px);
+  text-transform:uppercase;
+  letter-spacing:.4em;
+  color:rgba(255,255,255,.92);
+  opacity:0;
+  text-shadow:0 0 15px rgba(255,255,255,.15),0 0 28px rgba(120,0,0,.28);
+}
+.showMessage{animation:msg 1.6s ease forwards}
+@keyframes msg{
+  0%{opacity:0; transform:translateX(-50%) scale(.95)}
+  14%{opacity:1}
+  84%{opacity:.94}
+  100%{opacity:0; transform:translateX(-50%) scale(1.04)}
+}
+
+.flying{
+  position:fixed;
+  z-index:8;
+  pointer-events:none;
+  opacity:0;
+  filter:drop-shadow(0 0 28px rgba(255,255,255,.08));
+  will-change:transform, opacity;
+}
+.faceFly{
+  width:min(28vw,320px);
+  animation:floatFace 16s linear infinite;
+}
+.faceFly.face2{
+  width:min(24vw,280px);
+  animation-delay:-8s;
+  animation-duration:20s;
+}
+@keyframes floatFace{
+  0%{transform:translate(-30vw,10vh) rotate(-14deg) scale(.78); opacity:0}
+  8%{opacity:.24}
+  48%{opacity:.36}
+  100%{transform:translate(128vw,70vh) rotate(18deg) scale(1.12); opacity:0}
+}
+.dollFly{
+  width:min(27vw,300px);
+  animation:floatDoll 14s linear infinite;
+}
+.dollFly.doll2{
+  width:min(23vw,250px);
+  animation-delay:-7s;
+  animation-duration:18s;
+}
+@keyframes floatDoll{
+  0%{transform:translate(114vw,74vh) rotate(0deg) scale(.78); opacity:0}
+  10%{opacity:.24}
+  52%{opacity:.34}
+  100%{transform:translate(-28vw,16vh) rotate(-14deg) scale(1.18); opacity:0}
+}
+
+#timerWrap{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  z-index:14;
+  display:none;
+  text-align:center;
+  width:min(92vw,1200px);
+  pointer-events:none;
+}
+#timerWrap.active{ display:block; }
+#timerLabel{
+  color:#ff9393;
+  text-transform:uppercase;
+  letter-spacing:.42em;
+  font-family:"Courier New", monospace;
+  font-size:clamp(12px,1.4vw,18px);
+  text-shadow:0 0 12px rgba(255,0,0,.25);
+  margin-bottom:18px;
+  opacity:.9;
+}
+#timer{
+  color:var(--red2);
+  font-family:"Courier New", monospace;
+  font-weight:bold;
+  font-size:clamp(32px,4.3vw,78px);
+  line-height:1.12;
+  letter-spacing:.08em;
+  text-shadow:
+    0 0 8px rgba(255,0,0,.35),
+    0 0 22px rgba(255,0,0,.22),
+    0 0 44px rgba(120,0,0,.28);
+  animation:timerPulse 1s infinite;
+}
+@keyframes timerPulse{
+  0%,100%{transform:scale(1); opacity:.92}
+  50%{transform:scale(1.02); opacity:1}
+}
+#timer small{
+  display:block;
+  margin-top:18px;
+  color:#c46f6f;
+  font-size:clamp(10px,1.1vw,14px);
+  letter-spacing:.34em;
+  text-transform:uppercase;
+}
+
+#hellLayer{
+  position:fixed;
+  inset:0;
+  z-index:10;
+  pointer-events:none;
+  opacity:0;
+}
+#hellLayer.active{
+  opacity:1;
+  transition:opacity .8s ease;
+}
+.portal{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:min(40vw,560px);
+  height:min(70vh,820px);
+  transform:translate(-50%,-46%);
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,.18) 0, rgba(255,40,40,.18) 10%, rgba(120,0,0,.12) 26%, rgba(0,0,0,0) 64%);
+  filter:blur(8px);
+  animation:portalSpin 3s linear infinite;
+}
+@keyframes portalSpin{
+  0%{transform:translate(-50%,-46%) rotate(0deg) scale(1)}
+  50%{transform:translate(-50%,-46%) rotate(180deg) scale(1.05)}
+  100%{transform:translate(-50%,-46%) rotate(360deg) scale(1)}
+}
+.shard{
+  position:absolute;
+  width:3px;
+  height:110px;
+  background:linear-gradient(180deg, rgba(255,255,255,.65), rgba(180,0,0,.8), transparent);
+  transform-origin:center bottom;
+  opacity:.72;
+  animation:shardFly 1.3s linear infinite;
+}
+@keyframes shardFly{
+  from{transform:translate(0,0) rotate(var(--r)) scaleY(.5); opacity:.8}
+  to{transform:translate(var(--x), var(--y)) rotate(var(--r)) scaleY(1.2); opacity:0}
+}
+
+#screamer{
+  position:fixed;
+  inset:0;
+  z-index:999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle at center, rgba(120,0,0,.3), rgba(0,0,0,.95) 60%), #000;
+}
+#screamer.active{
+  display:flex;
+  animation:screenFlash 90ms steps(1) 18;
+}
+@keyframes screenFlash{
+  0%{filter:brightness(1) contrast(1)}
+  50%{filter:brightness(2.5) contrast(2.3)}
+  100%{filter:brightness(.65) contrast(1.4)}
+}
+#screamer img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  animation:shake 70ms infinite;
+}
+@keyframes shake{
+  0%{transform:translate(0,0) scale(1)}
+  25%{transform:translate(-10px,4px) scale(1.03)}
+  50%{transform:translate(10px,-6px) scale(1.04)}
+  75%{transform:translate(-7px,-5px) scale(1.02)}
+  100%{transform:translate(0,0) scale(1)}
+}
+</style>
+</head>
+<body>
+<div id="scene" class="closed"></div>
+<div id="doorGlow"></div>
+<div id="topText">доступ только по точным данным</div>
+
+<div id="overlay">
+  <div class="formCard">
+    <h1>Регистрация</h1>
+    <p>введи точные данные. дверь откроется только для тех, кого она ждёт.</p>
+    <label>Имя</label>
+    <input id="firstName" type="text" autocomplete="off" placeholder="Иван">
+    <label>Фамилия</label>
+    <input id="lastName" type="text" autocomplete="off" placeholder="Иванов">
+    <label>Точная дата рождения</label>
+    <input id="birthDate" type="date">
+    <button id="enterBtn">Открыть дверь</button>
+    <div id="err"></div>
+  </div>
+</div>
+
+<div id="message"></div>
+
+<div id="timerWrap">
+  <div id="timerLabel">таймер до конца</div>
+  <div id="timer">00 лет 000 дней 00:00:00.000<small>счёт уже запущен</small></div>
+</div>
+
+<img class="flying faceFly" src="img/flying_face.png" alt="">
+<img class="flying faceFly face2" src="img/flying_face.png" alt="">
+<img class="flying dollFly" src="img/flying_doll.gif" alt="">
+<img class="flying dollFly doll2" src="img/flying_doll.gif" alt="">
+
+<div id="hellLayer">
+  <div class="portal"></div>
+</div>
+
+<div id="screamer"><img src="img/screamer.gif" alt=""></div>
+
+<audio id="ambience" src="audio/ambience.mp3" loop preload="auto"></audio>
+
+<script>
+const scene = document.getElementById("scene");
+const doorGlow = document.getElementById("doorGlow");
+const overlay = document.getElementById("overlay");
+const message = document.getElementById("message");
+const err = document.getElementById("err");
+const hellLayer = document.getElementById("hellLayer");
+const screamer = document.getElementById("screamer");
+const ambience = document.getElementById("ambience");
+const firstName = document.getElementById("firstName");
+const lastName = document.getElementById("lastName");
+const birthDate = document.getElementById("birthDate");
+const enterBtn = document.getElementById("enterBtn");
+const timerWrap = document.getElementById("timerWrap");
+const timer = document.getElementById("timer");
+
+let audioCtx;
+let started = false;
+let timerDeadline = null;
+let timerRAF = null;
+
+function showMessage(text){
+  message.textContent = text;
+  message.classList.remove("showMessage");
+  void message.offsetWidth;
+  message.classList.add("showMessage");
+}
+
+function initAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function whoosh(){
+  if(!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.1, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i] = (Math.random()*2-1) * Math.pow(1-i/data.length,.5);
+  const src = audioCtx.createBufferSource();
+  src.buffer = noiseBuffer;
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.value = 700;
+  bp.Q.value = 0.8;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.0001;
+  src.connect(bp); bp.connect(gain); gain.connect(audioCtx.destination);
+  gain.gain.exponentialRampToValueAtTime(0.08, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.0);
+  src.start(now); src.stop(now + 1.0);
+}
+
+function scareSound(){
+  if(!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const master = audioCtx.createGain();
+  master.gain.value = 0.0001;
+  master.connect(audioCtx.destination);
+
+  const osc1 = audioCtx.createOscillator();
+  osc1.type = "sawtooth";
+  osc1.frequency.setValueAtTime(240, now);
+  osc1.frequency.exponentialRampToValueAtTime(40, now + 0.62);
+
+  const osc2 = audioCtx.createOscillator();
+  osc2.type = "square";
+  osc2.frequency.setValueAtTime(920, now);
+  osc2.frequency.exponentialRampToValueAtTime(150, now + 0.5);
+
+  const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.6, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i] = (Math.random()*2-1) * Math.pow(1-i/data.length,1.4);
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 1300;
+  filter.Q.value = 1.4;
+
+  osc1.connect(master);
+  osc2.connect(filter); noise.connect(filter); filter.connect(master);
+
+  master.gain.exponentialRampToValueAtTime(0.95, now + 0.03);
+  master.gain.exponentialRampToValueAtTime(0.0001, now + 0.62);
+
+  osc1.start(now); osc2.start(now); noise.start(now);
+  osc1.stop(now + 0.62); osc2.stop(now + 0.62); noise.stop(now + 0.62);
+}
+
+function validateForm(){
+  const fn = firstName.value.trim();
+  const ln = lastName.value.trim();
+  const bd = birthDate.value;
+  if(!fn || !ln || !bd){
+    err.textContent = "заполни все поля";
+    return false;
+  }
+  if(fn.length < 2 || ln.length < 2){
+    err.textContent = "слишком мало символов";
+    return false;
+  }
+  const year = new Date(bd).getFullYear();
+  if(!year || year < 1900 || year > new Date().getFullYear()){
+    err.textContent = "введи реальную дату";
+    return false;
+  }
+  err.textContent = "";
+  return true;
+}
+
+function makeShards(count=24){
+  hellLayer.innerHTML = '<div class="portal"></div>';
+  for(let i=0;i<count;i++){
+    const s = document.createElement("div");
+    s.className = "shard";
+    s.style.left = "50%";
+    s.style.top = "48%";
+    s.style.setProperty("--r", (Math.random()*360)+"deg");
+    s.style.setProperty("--x", (Math.random()*140-70)+"vw");
+    s.style.setProperty("--y", (Math.random()*110-55)+"vh");
+    s.style.animationDelay = (Math.random()*1.3)+"s";
+    hellLayer.appendChild(s);
+  }
+}
+
+function triggerScreamer(text){
+  if(text) showMessage(text);
+  screamer.classList.add("active");
+  scareSound();
+  setTimeout(() => screamer.classList.remove("active"), 950);
+}
+
+function createRandomDeadline(){
+  // Range from about 2 months to 89 years
+  const years = Math.floor(Math.random() * 89);
+  const days = Math.floor(Math.random() * 365);
+  const hours = Math.floor(Math.random() * 24);
+  const minutes = Math.floor(Math.random() * 60);
+  const seconds = Math.floor(Math.random() * 60);
+  const ms = Math.floor(Math.random() * 1000);
+  let totalMs =
+    years * 365 * 24 * 60 * 60 * 1000 +
+    days * 24 * 60 * 60 * 1000 +
+    hours * 60 * 60 * 1000 +
+    minutes * 60 * 1000 +
+    seconds * 1000 +
+    ms;
+
+  if (totalMs < 1000 * 60 * 60 * 24 * 30 * 2) {
+    totalMs += 1000 * 60 * 60 * 24 * 30 * 2;
+  }
+  return Date.now() + totalMs;
+}
+
+function pad(n, len=2){
+  return String(n).padStart(len, "0");
+}
+
+function startDeathTimer(){
+  timerDeadline = createRandomDeadline();
+  timerWrap.classList.add("active");
+
+  function tick(){
+    const diff = Math.max(0, timerDeadline - Date.now());
+
+    const yearMs = 365 * 24 * 60 * 60 * 1000;
+    const dayMs = 24 * 60 * 60 * 1000;
+    const hourMs = 60 * 60 * 1000;
+    const minuteMs = 60 * 1000;
+    const secondMs = 1000;
+
+    let remaining = diff;
+    const years = Math.floor(remaining / yearMs); remaining %= yearMs;
+    const days = Math.floor(remaining / dayMs); remaining %= dayMs;
+    const hours = Math.floor(remaining / hourMs); remaining %= hourMs;
+    const minutes = Math.floor(remaining / minuteMs); remaining %= minuteMs;
+    const seconds = Math.floor(remaining / secondMs); remaining %= secondMs;
+    const ms = remaining;
+
+    timer.innerHTML = `${pad(years,2)} лет ${pad(days,3)} дней ${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(ms,3)}<small>счёт уже запущен</small>`;
+
+    if (diff > 0) {
+      timerRAF = requestAnimationFrame(tick);
+    } else {
+      timer.innerHTML = `00 лет 000 дней 00:00:00.000<small>время вышло</small>`;
+      triggerScreamer("время вышло");
+    }
+  }
+  tick();
+}
+
+function randomHell(){
+  function loop(){
+    setTimeout(() => {
+      const texts = ["он вышел", "не смотри в дверь", "слишком поздно", "оно рядом", "счёт идёт"];
+      triggerScreamer(texts[Math.floor(Math.random()*texts.length)]);
+      loop();
+    }, 12000 + Math.random()*18000);
+  }
+  loop();
+}
+
+function beginHell(){
+  scene.classList.remove("closed");
+  scene.classList.add("opened");
+  doorGlow.classList.add("hell");
+  hellLayer.classList.add("active");
+  showMessage("дверь открылась");
+  whoosh();
+  startDeathTimer();
+  setTimeout(() => showMessage("начинается ад"), 1900);
+  setTimeout(() => triggerScreamer("я вижу тебя"), 4200);
+  setTimeout(() => showMessage("ты уже внутри"), 7000);
+  setTimeout(() => triggerScreamer("не убегай"), 9800);
+  randomHell();
+}
+
+enterBtn.addEventListener("click", () => {
+  initAudio();
+  if(!validateForm()) return;
+  if(!started){
+    started = true;
+    ambience.volume = .34;
+    ambience.play().catch(() => {});
+  }
+  overlay.classList.add("hidden");
+  makeShards();
+  beginHell();
+});
+
+document.addEventListener("mousemove", (e) => {
+  const x = (e.clientX / innerWidth - .5) * 14;
+  const y = (e.clientY / innerHeight - .5) * 10;
+  scene.style.transform = `translate(${x * .18}px, ${y * .18}px) scale(1.05)`;
+});
+
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden) return;
+  if(started) setTimeout(() => triggerScreamer("ты вернулся"), 900);
+});
+</script>
+</body>
+</html>
